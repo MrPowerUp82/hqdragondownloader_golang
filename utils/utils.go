@@ -119,6 +119,13 @@ func GetCaps(link string) HQCaps {
 }
 
 func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output string) {
+
+	temp_dir, err := os.MkdirTemp(os.TempDir(), "hqdragon")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	for idx, capLink := range capsLink {
 		if capLink != "All" {
 			hqCapPage, err := http.Get(capLink)
@@ -183,7 +190,7 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 
 				imageFileName := fmt.Sprintf("image_%s.jpg", pagStr)
 
-				file, err := os.Create(imageFileName)
+				file, err := os.Create(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
 
 				if err != nil {
 					log.Fatal(err)
@@ -200,7 +207,7 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 				pdf.AddPage()
 
 				// Add the image to the PDF document
-				pdf.Image(imageFileName, 0, 0, 210, 297, false, "", 0, "")
+				pdf.Image(fmt.Sprintf("%v/%v", temp_dir, imageFileName), 0, 0, 210, 297, false, "", 0, "")
 
 			})
 
@@ -209,7 +216,7 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 				log.Fatal(err)
 			}
 
-			imagesFile, err := os.ReadDir(".")
+			imagesFile, err := os.ReadDir(temp_dir)
 
 			if err != nil {
 				log.Fatal(err)
@@ -217,7 +224,7 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 
 			for _, image := range imagesFile {
 				if strings.Contains(image.Name(), "image_") {
-					err = os.Remove(image.Name())
+					err = os.Remove(fmt.Sprintf("%v/%v", temp_dir, image.Name()))
 
 					if err != nil {
 						log.Fatal(err)
