@@ -91,6 +91,7 @@ func App() {
 
 		if selectInputCap.Selected == "" {
 			labelResult.Text = "Selecione um capítulo."
+			labelResult.Refresh()
 			return
 		}
 
