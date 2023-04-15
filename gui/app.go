@@ -106,6 +106,7 @@ func App() {
 	}), labelResult, selectPath)
 	//icon := widget.NewIcon(nil)
 	button := widget.NewButtonWithIcon("", nil, func() {
+		w = fyne.CurrentApp().NewWindow("HQPageToDownload")
 		dataCaps = utils.GetCaps(linkHQ)
 		selectInputCap.Options = dataCaps.Caps
 		w.Resize(fyne.NewSize(480, 380))
@@ -151,6 +152,13 @@ func App() {
 	input2Search := widget.NewEntry()
 
 	button2Search := widget.NewButtonWithIcon("", theme.SearchIcon(), func() {
+		list.UnselectAll()
+
+		data = utils.HQs{
+			Links: []string{},
+			Names: []string{},
+		}
+
 		data = utils.Search2HQ(input2Search.Text)
 
 		label.Text = "Selecione uma HQ!"
