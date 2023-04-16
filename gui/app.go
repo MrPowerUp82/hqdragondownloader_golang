@@ -123,7 +123,7 @@ func App() {
 			return len(data.Names)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewLabel("Test")
+			return widget.NewLabel("HQ Name")
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*widget.Label).SetText(data.Names[i])
@@ -160,6 +160,8 @@ func App() {
 		}
 
 		data = utils.Search2HQ(input2Search.Text)
+
+		list.Refresh()
 
 		label.Text = "Selecione uma HQ!"
 
