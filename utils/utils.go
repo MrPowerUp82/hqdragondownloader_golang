@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"image/jpeg"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 	"fyne.io/fyne/v2/widget"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chai2010/webp"
 	"github.com/jung-kurt/gofpdf"
 )
 
@@ -174,6 +176,8 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 
 				imgContent, err := http.Get(imgSrc)
 
+				imageOriginalFileName := strings.Split(imgSrc, "/")[len(strings.Split(imgSrc, "/"))-1]
+
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -192,6 +196,12 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 
 				file, err := os.Create(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
 
+				if strings.HasSuffix(imageOriginalFileName, ".webp") {
+					file, err = os.Create(fmt.Sprintf("%v/%v", temp_dir, imageOriginalFileName))
+				} else {
+					file, err = os.Create(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
+				}
+
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -204,10 +214,87 @@ func DownloadHQ(capsLink []string, name string, label *widget.Label, path2Output
 					log.Fatal(err)
 				}
 
-				pdf.AddPage()
+				//Format image:
+				if strings.HasSuffix(imageOriginalFileName, ".webp") {
+					// Open the input .png image file
+					fileIn, err := os.Open(fmt.Sprintf("%v/%v", temp_dir, imageOriginalFileName))
+					if err != nil {
+						panic(err)
+					}
+					defer fileIn.Close()
 
-				// Add the image to the PDF document
-				pdf.Image(fmt.Sprintf("%v/%v", temp_dir, imageFileName), 0, 0, 210, 297, false, "", 0, "")
+					// Decode the input image as an image.Image
+					imgIn, errWebp := webp.Decode(fileIn)
+					if errWebp != nil {
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.SetFont("Arial", "B", 16)
+						pdf.Cell(40, 10, "Imagem corrompida.")
+					} else {
+						// Create a new output .jpg image file
+						fileOut, err := os.Create(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
+						if err != nil {
+							panic(err)
+						}
+						defer fileOut.Close()
+
+						// Encode the input image as a .jpg image with 95% quality
+						jpeg.Encode(fileOut, imgIn, &jpeg.Options{Quality: 90})
+
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.Image(fmt.Sprintf("%v/%v", temp_dir, imageFileName), 0, 0, 210, 297, false, "", 0, "")
+					}
+
+				}
+				if strings.HasSuffix(imageOriginalFileName, ".png") {
+					fileIn, err := os.Open(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
+					if err != nil {
+						panic(err)
+					}
+					defer fileIn.Close()
+
+					// Decode the input image as an image.Image
+					_, errPNG := webp.Decode(fileIn)
+					if errPNG != nil {
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.SetFont("Arial", "B", 16)
+						pdf.Cell(40, 10, "Imagem corrompida.")
+					} else {
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.Image(fmt.Sprintf("%v/%v", temp_dir, imageFileName), 0, 0, 210, 297, false, "", 0, "")
+					}
+				}
+
+				if strings.HasSuffix(imageOriginalFileName, ".jpg") || strings.HasSuffix(imageOriginalFileName, ".jpeg") {
+					fileIn, err := os.Open(fmt.Sprintf("%v/%v", temp_dir, imageFileName))
+					if err != nil {
+						panic(err)
+					}
+					defer fileIn.Close()
+
+					// Decode the input image as an image.Image
+					_, errJPG := webp.Decode(fileIn)
+					if errJPG != nil {
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.SetFont("Arial", "B", 16)
+						pdf.Cell(40, 10, "Imagem corrompida.")
+
+					} else {
+						pdf.AddPage()
+
+						// Add the image to the PDF document
+						pdf.Image(fmt.Sprintf("%v/%v", temp_dir, imageFileName), 0, 0, 210, 297, false, "", 0, "")
+					}
+				}
 
 			})
 
